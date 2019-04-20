@@ -10,10 +10,10 @@ David Szymanski - szymansk@purdue.edu
 
 ToDo:
 >add a main menu with a title, controls, and options 0) exit 1) play game 2) view high scores
->Use a queue of blocks to show upcoming blocks, pull from the queue when adding to the game
+>Use a queue of 2 blocks to show upcoming blocks, pull from the queue when adding to the game
 >always print the queue on top of the game area, next block to the left
 >when the game starts, read scores from a file and put them in a linked list
->When the game is over, ask for a name and add them to the list with their score. Then, ask if they want to play again. If they dont want to play again, save the linked list to the file.
+>When the game is over, ask for a name and add them to the list with their score. Then, send the user to the main menu save the linked list to the file.
 
 Extra:
 >Add block reserve
