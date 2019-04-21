@@ -125,7 +125,7 @@ bool decision = true;
 	scanf ("%d", &choice);
 	fflush(stdin);
 
-	switch choice 
+	switch (choice)
 	{
 
 	case 0: 
@@ -151,14 +151,14 @@ void initializeBlocks()
 	while (ctr < 15)
 	{
 	blockNode* blockN =(blockNode*)malloc(sizeof(blockNode)); 
-	blockN->block = blocks[random() % BLOCKS_SIZE];		
-	addBlock(block,pointer);
+	blockN->block =blocks[random() % BLOCKS_SIZE];		
+	addBlock(blockN,pointer);
 	ctr ++; 
 	}
 }
 
 void addBlock (blockNode* newblock, blockNode* pointer){
-	while (pointer->link != null)
+	while (pointer->link != NULL)
 	{
 	pointer = pointer->link; 
 	}
