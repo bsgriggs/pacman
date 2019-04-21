@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <time.h>
+#include <stdbool.h>
 #include <fcntl.h>
 
 typedef struct level{
@@ -10,10 +11,13 @@ typedef struct level{
 	int nsec;
 }level;
 
-typedef struct blockNode{
-	char data[5][5];
-	int width;
-	int height;
+typedef struct blockNode{	
+	struct blockNode* link; 
+	struct block {
+		char data[5][5];
+		int width;
+		int height;
+	}block;
 }blockNode;
 
 typedef struct playerNode{
@@ -109,9 +113,57 @@ void setTerminal();
 void cleanMemory(game *);
 
 int main(){
-	runTetris();
+
+int choice = 0; 
+bool decision = true;
+
+	while (decision) {
+
+	printf ("0. Exit game");
+	printf ("1. PLay game");
+	printf ("2. View High Score");
+	scanf ("%d", &choice);
+	fflush(stdin);
+
+	switch choice 
+	{
+
+	case 0: 
+		printf ("Bye");
+		decision = false; 
+	case 1: 
+		runTetris();
+	case 2: 
+	//View High Scores
+		
+	 default:
+		printf ("Error Try Again"); 
+	}
+	
+}
+
 }// main end
 
+void initializeBlocks()
+{
+	int ctr = 0; 
+	blockNode* pointer=(blockNode*)malloc(sizeof(blockNode));
+	while (ctr < 15)
+	{
+	blockNode* blockN =(blockNode*)malloc(sizeof(blockNode)); 
+	blockN->block = blocks[random() % BLOCKS_SIZE];		
+	addBlock(block,pointer);
+	ctr ++; 
+	}
+}
+
+void addBlock (blockNode* newblock, blockNode* pointer){
+	while (pointer->link != null)
+	{
+	pointer = pointer->link; 
+	}
+	pointer->link = newblock; 
+}
 void runTetris(){
 	struct timespec tm;
 	game g;
@@ -125,6 +177,7 @@ void runTetris(){
 	tm.tv_nsec=1000000;
 
 	pickBlock(&g);
+//initialize the queue here 
 	while (!g.gameover) {
 		nanosleep(&tm, NULL);
 		count++;
