@@ -4,6 +4,7 @@
 #include <time.h>
 #include <stdbool.h>
 #include <fcntl.h>
+#include <string.h>
 
 typedef struct level{
 	int l;
@@ -11,35 +12,35 @@ typedef struct level{
 	int nsec;
 }level;
 
+typedef struct block{
+	char data[5][5];
+	int width;
+	int height;
+}block;
+
 typedef struct blockNode{	
 	struct blockNode* link; 
-	struct block {
-		char data[5][5];
-		int width;
-		int height;
-	}block;
+	block piece;
 }blockNode;
 
 typedef struct playerNode{
 	char name[20];
 	int score;
-	struct tm date;
+	char date[20];
+	struct playerNode * next;
 }playerNode;
 
 typedef struct game{
 	//2d array of the game UI
 	char **game;
+	char player[20];
 	int width;
 	int height;
 	int level;
 	int gameover;
 	int score;
 	//struct of current falling block
-	struct block{
-		char data[5][5];
-		int width;
-		int height;
-	}block;
+	block current;
 	//pointer to a queue of next blocks
 	blockNode * queue;
 	int x;
@@ -108,20 +109,33 @@ void fallLine(game *, int);
 int checkLevelFromScore(game *);
 void rotateBlock(game *);
 
+void initializeBlocks();
+void addBlock(blockNode*, blockNode*);
 void returnTerminal();
 void setTerminal();
 void cleanMemory(game *);
 
+void readScores();
+void writeScores(playerNode*);
+void createPlayer(game*);
+
+void viewScores();
+
+playerNode * playerHEAD = NULL;
+
 int main(){
 
-int choice = 0; 
-bool decision = true;
+	readScores();
+	int choice = 0; 
+	bool decision = true;
 
 	while (decision) {
 
-	printf ("0. Exit game");
-	printf ("1. PLay game");
-	printf ("2. View High Score");
+	printf("Tetris\n\n");
+	printf("Created by:\nBenjamin Griggs\nNicole Griffin\nZayyad Atekoja\nAllison Babilonia\nDavid Szymanski\n\n");
+	printf ("0. Exit game\n");
+	printf ("1. PLay game\n");
+	printf ("2. View High Score\n");
 	scanf ("%d", &choice);
 	fflush(stdin);
 
@@ -129,15 +143,19 @@ bool decision = true;
 	{
 
 	case 0: 
-		printf ("Bye");
+		printf ("Bye\n");
 		decision = false; 
+		break;
 	case 1: 
 		runTetris();
+		decision = false; 
+		break;
 	case 2: 
-	//View High Scores
+		viewScores();
+		break;
 		
 	 default:
-		printf ("Error Try Again"); 
+		printf ("Error Try Again\n"); 
 	}
 	
 }
@@ -151,24 +169,31 @@ void initializeBlocks()
 	while (ctr < 15)
 	{
 	blockNode* blockN =(blockNode*)malloc(sizeof(blockNode)); 
-	blockN->block =blocks[random() % BLOCKS_SIZE];		
+	blockN->piece =blocks[random() % BLOCKS_SIZE];		
 	addBlock(blockN,pointer);
 	ctr ++; 
 	}
 }
 
-void addBlock (blockNode* newblock, blockNode* pointer){
+void addBlock(blockNode* newblock, blockNode* pointer){
 	while (pointer->link != NULL)
 	{
 	pointer = pointer->link; 
 	}
 	pointer->link = newblock; 
 }
+
 void runTetris(){
 	struct timespec tm;
 	game g;
 	char input;
 	int count=0;
+
+	char str[20];
+	printf("Enter your Name.\n");	
+	scanf("%s", str);
+	strcpy(g.player, str);
+
 	setTerminal();
 	initialize(GAME_AREA_WIDTH, GAME_AREA_HEIGHT, &g);
 	srand(time(NULL));
@@ -177,7 +202,7 @@ void runTetris(){
 	tm.tv_nsec=1000000;
 
 	pickBlock(&g);
-//initialize the queue here 
+	//initialize the queue here 
 	while (!g.gameover) {
 		nanosleep(&tm, NULL);
 		count++;
@@ -219,6 +244,8 @@ void runTetris(){
 
 	cleanMemory(&g);
 	returnTerminal();
+	createPlayer(&g);
+	writeScores(playerHEAD);
 } //runTetris end
 
 //set defaults and allocated memory for the game UI
@@ -258,9 +285,9 @@ void printGame(game *g) {
 		printf ("|");
 		for (x = 0; x < g->width; x++) {
 			// print block if it should be in that position
-			if (x >= g->x && y >= g->y && x < (g->x + g->block.width)
-			 && y < (g->y + g->block.height) && g->block.data[y - g->y][x - g->x] != ' '){
-				printf("%c ", g->block.data[y - g->y][x - g->x]);
+			if (x >= g->x && y >= g->y && x < (g->x + g->current.width)
+			 && y < (g->y + g->current.height) && g->current.data[y - g->y][x - g->x] != ' '){
+				printf("%c ", g->current.data[y - g->y][x - g->x]);
 			}
 			// else print the game UI array value for that postion
 			else
@@ -280,15 +307,15 @@ void printGame(game *g) {
 //return 1 if the piece cant move in a direction
 int collisionTest(game *g) {
 	int testX, testY;
-	for (int x = 0; x < g->block.width; x++)
-		for (int y = 0; y < g->block.height; y++) {
+	for (int x = 0; x < g->current.width; x++)
+		for (int y = 0; y < g->current.height; y++) {
 			testX = g->x + x;
 			testY = g->y + y;
 			//if attempted move is outside the borders
 			if ( testX < 0 || testX >= g->width)
 				return 1;
 			//if the attempted move has a char there
-			if ( g->block.data[y][x]!=' ') {
+			if ( g->current.data[y][x]!=' ') {
 				if (( testY >= g->height) || (testX >= 0 && testX < g->width && testY >= 0 &&
 					g->game[testX][testY]!=' ')){
 					return 1;
@@ -301,9 +328,9 @@ int collisionTest(game *g) {
 //load the game with a new random block
 void pickBlock(game *g) {
 	//get randmon block from blocks array
-	g->block = blocks[random() % BLOCKS_SIZE];
+	g->current = blocks[random() % BLOCKS_SIZE];
 	//center the block
-	g->x = (g->width / 2) - (g->block.width / 2);
+	g->x = (g->width / 2) - (g->current.width / 2);
 	//align block to top
 	g->y = 0;
 	//if the block cant go down while it is at the top, then the game is over
@@ -340,10 +367,10 @@ void blockFastFall(game *g, struct timespec* t) {
 //updates the game string to have the block in it
 void printBlock(game *g) {
 	int X,Y;
-	for (int x = 0; x < g->block.width; x++)
-		for (int y = 0; y < g->block.height; y++) {
-			if (g->block.data[y][x] != ' ')
-				g->game[g->x + x][g->y + y] = g->block.data[y][x];
+	for (int x = 0; x < g->current.width; x++)
+		for (int y = 0; y < g->current.height; y++) {
+			if (g->current.data[y][x] != ' ')
+				g->game[g->x + x][g->y + y] = g->current.data[y][x];
 	}
 } //printBlock end
 
@@ -399,9 +426,9 @@ int checkLevelFromScore(game *g) {
 //rotates the games current block and checks for collision
 void rotateBlock(game *g) {
 	//block to be rotated
-	struct block rotate = g->block;
+	block rotate = g->current;
 	//store the original state 
-	struct block safe = rotate;
+	block safe = rotate;
 	int x,y;
 	rotate.width = safe.height;
 	rotate.height = safe.width;
@@ -417,10 +444,10 @@ void rotateBlock(game *g) {
 	g->x -= (rotate.width - safe.width) / 2;
 	g->y -= (rotate.height - safe.height) / 2;
 	//set the game's block to the rotated one
-	g->block = rotate;
+	g->current = rotate;
 	//if the rotated block colides with something, restore the safe version
 	if (collisionTest(g)) {
-		g->block = safe;
+		g->current = safe;
 		g->x = x;
 		g->y = y;
 	}
@@ -450,3 +477,78 @@ void cleanMemory(game *g) {
 	}
 	free(g->game);
 }// cleanMemory end
+
+//get the scores from the file
+void readScores(){
+	FILE *fin;
+	fin = fopen("scores.dat", "a");
+	if (fin == NULL){
+		printf("scores.dat was not found.\n");
+		fclose(fin);
+		return;
+	}
+	playerHEAD = (playerNode*)malloc(sizeof(playerNode));
+	playerNode * current = playerHEAD;
+	while (fscanf(fin,"%20s%20s%d\n", current->name, current->date, &current->score) != EOF){
+		current->next = (playerNode*)malloc(sizeof(playerNode));
+		current = current->next;
+	}
+	fclose(fin);
+}// readScores end
+
+//store the scores to the file
+void writeScores(playerNode* head){
+	FILE *fout;
+	fout = fopen("scores.dat", "w");
+	playerNode * current = head;
+	int counter = 1;
+	while (current != NULL){
+		fprintf(fout,"%-20s%-20s%d\n", current->name, current->date ,current->score);
+		current = current->next;
+	}
+	fclose(fout);
+}// writeScores end
+
+void createPlayer(game *g){
+	if (g->score == 0)
+		return;
+	char date[20] = "today";
+	if(playerHEAD == NULL){
+		playerNode * temp = (playerNode*)malloc(sizeof(playerNode));
+		strcpy(temp->name, g->player);
+		temp->score = g->score;
+		strcpy(temp->date,date);
+		temp->next = NULL;
+		playerHEAD = temp;
+		return;
+	}
+	if (g->score > playerHEAD->score){
+		playerNode * temp = (playerNode*)malloc(sizeof(playerNode));
+		strcpy(temp->name, g->player);
+		temp->score = g->score;
+		strcpy(temp->date,date);
+		temp->next = playerHEAD;
+		playerHEAD = temp;
+		return;
+	}
+	playerNode * temp = (playerNode*)malloc(sizeof(playerNode));
+	strcpy(temp->name, g->player);
+	temp->score = g->score;
+	strcpy(temp->date,date);
+
+	playerNode * current = playerHEAD;
+	while(g->score < current->next->score)
+		current = current->next;
+	temp->next = current->next;
+	current->next = temp;
+}// createPlayer end
+
+void viewScores(){
+	if(playerHEAD == NULL)
+		printf("There are no scores yet.\n");
+	playerNode * current = playerHEAD;
+	while(current != NULL){
+		printf("%-20s%-20s%d\n", current->name, current->date ,current->score);
+		current = current->next;
+	}
+}

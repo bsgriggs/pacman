@@ -9,15 +9,13 @@ Allison Babilonia - ababilo@purdue.edu
 David Szymanski - szymansk@purdue.edu
 
 ToDo:
->add a main menu with a title, controls, and options 0) exit 1) play game 2) view high scores
 >Use a queue of 2 blocks to show upcoming blocks, pull from the queue when adding to the game
 >always print the queue on top of the game area, next block to the left
 >when the game starts, read scores from a file and put them in a linked list
->When the game is over, ask for a name and add them to the list with their score. Then, send the user to the main menu save the linked list to the file.
 
-Extra:
->Add block reserve
->Add option to change controls, game area size, and or starting level
+known bugs:
+>termios doesnt reset after the game has ended
+>reading from file creates and empty end node
 
 Sample Game Area ():
 {Current Score: 0 | Current Level: 1}
