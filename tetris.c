@@ -109,7 +109,8 @@ int checkLevelFromScore(game *);
 void rotateBlock(game *);
 
 void initializeBlocks();
-void addBlock(blockNode*, blockNode*);
+void enqueueBlock(blockNode*, blockNode*);
+void dequeueBlock(blockNode*);
 void returnTerminal();
 void setTerminal();
 void cleanMemory(game *);
@@ -187,18 +188,34 @@ void initializeBlocks()
 	while (ctr < 15)
 	{
 	blockNode* blockN =(blockNode*)malloc(sizeof(blockNode)); 
+	block blocks = (block)(malloc(sizeof(block)));
 	blockN->piece =blocks[random() % BLOCKS_SIZE];		
 	addBlock(blockN,pointer);
 	ctr ++; 
 	}
 }
 
-void addBlock(blockNode* newblock, blockNode* pointer){
+void enqueueBlock(blockNode* newblock,blockNode* pointer){
 	while (pointer->link != NULL)
 	{
 	pointer = pointer->link; 
 	}
 	pointer->link = newblock; 
+}
+void dequeueBlock(blockNode* pointer){
+
+    blockNode* nxt = NULL;
+    blockNode* curr = pointer->link; 
+    if (curr->link != NULL){
+    nxt = curr->link; 
+    pointer->link = nxt; 
+    }
+    else 
+    {
+        pointer->link = NULL; 
+    
+    }
+
 }
 
 void runTetris(){
