@@ -33,7 +33,6 @@ typedef struct playerNode{
 typedef struct game{
 	//2d array of the game UI
 	char **game;
-	char player[20];
 	int width;
 	int height;
 	int level;
@@ -121,59 +120,45 @@ void createPlayer(game*);
 
 void viewScores();
 
+//head pointer for player linked list
 playerNode * playerHEAD = NULL;
-<<<<<<< HEAD
 char player[20] = "p";
 
 int main(){
 
-	
 	readScores();
-	int choice = 1; 
-=======
-
-int main(){
-
-	readScores();
-	int choice = 0; 
->>>>>>> 4327767fb2120659576033ece240c0540256d3bb
+	int choice = 4; 
 	bool decision = true;
 
-	while (decision) {
-
 	printf("Tetris\n\n");
-<<<<<<< HEAD
 	printf("Created by:\nBenjamin Griggs -- Nicole Griffin\nZayyad Atekoja -- Allison Babilonia\n\tDavid Szymanski\n\n");
-
+	while (decision) {
+	// menu output
 	printf ("0. Exit game\n");
 	printf ("1. PLay game\n");
 	printf ("2. View High Score\n");
 	printf ("3. View Controls\n");
-=======
-	printf("Created by:\nBenjamin Griggs\nNicole Griffin\nZayyad Atekoja\nAllison Babilonia\nDavid Szymanski\n\n");
-	printf ("0. Exit game\n");
-	printf ("1. PLay game\n");
-	printf ("2. View High Score\n");
->>>>>>> 4327767fb2120659576033ece240c0540256d3bb
 	scanf ("%d", &choice);
 	fflush(stdin);
 
 	switch (choice)
 	{
 
+	//exit game
 	case 0: 
 		printf ("Bye\n");
 		decision = false; 
 		break;
+	//play the game
 	case 1: 
 		runTetris();
 		decision = false; 
 		break;
+	//print player linked lsit
 	case 2: 
 		viewScores();
 		break;
-		
-<<<<<<< HEAD
+	//controls output
 	case 3:
 		printf("Move Left with 'a'.\n");
 		printf("Move Right with 'd'.\n");
@@ -182,10 +167,12 @@ int main(){
 		printf("Full Drop with 'w'.\n");
 		printf("End the game with 'u'.\n\n");
 		break;
+	//default output if termios didnt reset
+	case 4:
+		printf("\t--You must restart terminal. <termios.h> failed to reset.--\n");
+		decision = false;
+		break;
 	default:
-=======
-	 default:
->>>>>>> 4327767fb2120659576033ece240c0540256d3bb
 		printf ("Error Try Again\n"); 
 	}
 	
@@ -220,15 +207,10 @@ void runTetris(){
 	char input;
 	int count=0;
 
-<<<<<<< HEAD
-	printf("Enter your Name (20 character max).\n");	
-	scanf("%s", player);
-=======
 	char str[20];
 	printf("Enter your Name.\n");	
 	scanf("%s", str);
-	strcpy(g.player, str);
->>>>>>> 4327767fb2120659576033ece240c0540256d3bb
+	strcpy(player, str);
 
 	setTerminal();
 	initialize(GAME_AREA_WIDTH, GAME_AREA_HEIGHT, &g);
@@ -497,7 +479,7 @@ void returnTerminal() {
 	tcsetattr(fileno(stdin),TCSANOW,&save);
 }
 
-//Make input auto-enter?
+//Make input auto-enter (not working)
 void setTerminal() {
 	struct termios custom;
 	int fd = fileno(stdin);
@@ -520,19 +502,25 @@ void cleanMemory(game *g) {
 //get the scores from the file
 void readScores(){
 	FILE *fin;
-	fin = fopen("scores.dat", "a");
+	fin = fopen("scores.dat", "r");
+	//if file DNE
 	if (fin == NULL){
-		printf("scores.dat was not found.\n");
+		printf("\t--No score history was found.--\n");
+		fin = fopen("scores.dat", "w");
 		fclose(fin);
-		return;
 	}
-	playerHEAD = (playerNode*)malloc(sizeof(playerNode));
-	playerNode * current = playerHEAD;
-	while (fscanf(fin,"%20s%20s%d\n", current->name, current->date, &current->score) != EOF){
-		current->next = (playerNode*)malloc(sizeof(playerNode));
-		current = current->next;
+	else {
+		// initialize player Linked List
+		playerHEAD = (playerNode*)malloc(sizeof(playerNode));
+		playerNode * current = playerHEAD;
+		// load file contents into Linked List
+		while (fscanf(fin,"%20s%20s%d\n", current->name, current->date, &current->score) != EOF){
+			//printf("-DEBUG: reading from file-");
+			current->next = (playerNode*)malloc(sizeof(playerNode));
+			current = current->next;
+		}
+		fclose(fin);
 	}
-	fclose(fin);
 }// readScores end
 
 //store the scores to the file
@@ -541,7 +529,9 @@ void writeScores(playerNode* head){
 	fout = fopen("scores.dat", "w");
 	playerNode * current = head;
 	int counter = 1;
+	//load Linked List contents into file
 	while (current != NULL){
+		//printf("-DEBUG: writing to file-");
 		fprintf(fout,"%-20s%-20s%d\n", current->name, current->date ,current->score);
 		current = current->next;
 	}
@@ -549,57 +539,53 @@ void writeScores(playerNode* head){
 }// writeScores end
 
 void createPlayer(game *g){
+	// if the player's score is 0, then dont save it
 	if (g->score == 0)
 		return;
+	// get today's date time
 	char date[20] = "today";
 	if(playerHEAD == NULL){
+		//if there are no nodes, make new one head
 		playerNode * temp = (playerNode*)malloc(sizeof(playerNode));
-<<<<<<< HEAD
 		strcpy(temp->name, player);
-=======
-		strcpy(temp->name, g->player);
->>>>>>> 4327767fb2120659576033ece240c0540256d3bb
 		temp->score = g->score;
 		strcpy(temp->date,date);
 		temp->next = NULL;
 		playerHEAD = temp;
-		return;
-	}
-	if (g->score > playerHEAD->score){
+	}else if (g->score > playerHEAD->score){
+		//if the new score is higher than the current head, insert front
 		playerNode * temp = (playerNode*)malloc(sizeof(playerNode));
-<<<<<<< HEAD
 		strcpy(temp->name, player);
-=======
-		strcpy(temp->name, g->player);
->>>>>>> 4327767fb2120659576033ece240c0540256d3bb
 		temp->score = g->score;
 		strcpy(temp->date,date);
 		temp->next = playerHEAD;
 		playerHEAD = temp;
-		return;
-	}
-	playerNode * temp = (playerNode*)malloc(sizeof(playerNode));
-<<<<<<< HEAD
-	strcpy(temp->name, player);
-=======
-	strcpy(temp->name, g->player);
->>>>>>> 4327767fb2120659576033ece240c0540256d3bb
-	temp->score = g->score;
-	strcpy(temp->date,date);
+	}else {
+		//else navigate to the sorted spot and insert
+		playerNode * temp = (playerNode*)malloc(sizeof(playerNode));
+		strcpy(temp->name, player);
+		temp->score = g->score;
+		strcpy(temp->date,date);
 
-	playerNode * current = playerHEAD;
-	while(g->score < current->next->score)
-		current = current->next;
-	temp->next = current->next;
-	current->next = temp;
+		playerNode * current = playerHEAD;
+		while(g->score < current->next->score)
+			current = current->next;
+		temp->next = current->next;
+		current->next = temp;
+	}
 }// createPlayer end
 
 void viewScores(){
 	if(playerHEAD == NULL)
-		printf("There are no scores yet.\n");
-	playerNode * current = playerHEAD;
-	while(current != NULL){
-		printf("%-20s%-20s%d\n", current->name, current->date ,current->score);
-		current = current->next;
+		printf("\t--There are no scores yet.--\n\n");
+	else{
+		playerNode * current = playerHEAD;
+		printf("%-20s%-20s%-5s\n","Player", "Date", "Score");
+		printf("---------------------------------------------\n");
+		// traverse and print all of the linked list
+		while(current != NULL){
+			printf("%-20s%-20s%d\n", current->name, current->date ,current->score);
+			current = current->next;
+		}
 	}
 }
