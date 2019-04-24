@@ -122,20 +122,39 @@ void createPlayer(game*);
 void viewScores();
 
 playerNode * playerHEAD = NULL;
+<<<<<<< HEAD
+char player[20] = "p";
+
+int main(){
+
+	
+	readScores();
+	int choice = 1; 
+=======
 
 int main(){
 
 	readScores();
 	int choice = 0; 
+>>>>>>> 4327767fb2120659576033ece240c0540256d3bb
 	bool decision = true;
 
 	while (decision) {
 
 	printf("Tetris\n\n");
+<<<<<<< HEAD
+	printf("Created by:\nBenjamin Griggs -- Nicole Griffin\nZayyad Atekoja -- Allison Babilonia\n\tDavid Szymanski\n\n");
+
+	printf ("0. Exit game\n");
+	printf ("1. PLay game\n");
+	printf ("2. View High Score\n");
+	printf ("3. View Controls\n");
+=======
 	printf("Created by:\nBenjamin Griggs\nNicole Griffin\nZayyad Atekoja\nAllison Babilonia\nDavid Szymanski\n\n");
 	printf ("0. Exit game\n");
 	printf ("1. PLay game\n");
 	printf ("2. View High Score\n");
+>>>>>>> 4327767fb2120659576033ece240c0540256d3bb
 	scanf ("%d", &choice);
 	fflush(stdin);
 
@@ -154,7 +173,19 @@ int main(){
 		viewScores();
 		break;
 		
+<<<<<<< HEAD
+	case 3:
+		printf("Move Left with 'a'.\n");
+		printf("Move Right with 'd'.\n");
+		printf("Drop Faster with 's'.\n");
+		printf("Rotate with 'spacebar'.\n");
+		printf("Full Drop with 'w'.\n");
+		printf("End the game with 'u'.\n\n");
+		break;
+	default:
+=======
 	 default:
+>>>>>>> 4327767fb2120659576033ece240c0540256d3bb
 		printf ("Error Try Again\n"); 
 	}
 	
@@ -189,10 +220,15 @@ void runTetris(){
 	char input;
 	int count=0;
 
+<<<<<<< HEAD
+	printf("Enter your Name (20 character max).\n");	
+	scanf("%s", player);
+=======
 	char str[20];
 	printf("Enter your Name.\n");	
 	scanf("%s", str);
 	strcpy(g.player, str);
+>>>>>>> 4327767fb2120659576033ece240c0540256d3bb
 
 	setTerminal();
 	initialize(GAME_AREA_WIDTH, GAME_AREA_HEIGHT, &g);
@@ -234,13 +270,16 @@ void runTetris(){
 				case 'w':
 				blockFastFall(&g, &tm);
 				break;
+				case 'u':
+				g.gameover = 1;
+				break;
 			}
 		}
 		tm.tv_nsec=checkLevelFromScore(&g);
 	}
 
 	printGame(&g);
-	printf("*** GAME OVER ***\n");
+	printf("*** GAME OVER ***\n%s's score was %d.\n\n", player, g.score);
 
 	cleanMemory(&g);
 	returnTerminal();
@@ -515,7 +554,11 @@ void createPlayer(game *g){
 	char date[20] = "today";
 	if(playerHEAD == NULL){
 		playerNode * temp = (playerNode*)malloc(sizeof(playerNode));
+<<<<<<< HEAD
+		strcpy(temp->name, player);
+=======
 		strcpy(temp->name, g->player);
+>>>>>>> 4327767fb2120659576033ece240c0540256d3bb
 		temp->score = g->score;
 		strcpy(temp->date,date);
 		temp->next = NULL;
@@ -524,7 +567,11 @@ void createPlayer(game *g){
 	}
 	if (g->score > playerHEAD->score){
 		playerNode * temp = (playerNode*)malloc(sizeof(playerNode));
+<<<<<<< HEAD
+		strcpy(temp->name, player);
+=======
 		strcpy(temp->name, g->player);
+>>>>>>> 4327767fb2120659576033ece240c0540256d3bb
 		temp->score = g->score;
 		strcpy(temp->date,date);
 		temp->next = playerHEAD;
@@ -532,7 +579,11 @@ void createPlayer(game *g){
 		return;
 	}
 	playerNode * temp = (playerNode*)malloc(sizeof(playerNode));
+<<<<<<< HEAD
+	strcpy(temp->name, player);
+=======
 	strcpy(temp->name, g->player);
+>>>>>>> 4327767fb2120659576033ece240c0540256d3bb
 	temp->score = g->score;
 	strcpy(temp->date,date);
 
