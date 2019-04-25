@@ -95,6 +95,7 @@ struct level levels[]={
 struct termios save;
 
 //global prototype definitions
+//main game functions
 void runTetris();
 void initialize(int, int, game *);
 void printGame(game *);
@@ -107,22 +108,27 @@ void checkCompleteLine(game *);
 void fallLine(game *, int);
 int checkLevelFromScore(game *);
 void rotateBlock(game *);
-
+//queue functions
 void initializeBlocks();
-void enqueueBlock(blockNode*, blockNode*);
-void dequeueBlock(blockNode*);
+void enqueueBlock();
+block dequeueBlock();
+//terminal functions
 void returnTerminal();
 void setTerminal();
 void cleanMemory(game *);
-
+//file functions
 void readScores();
 void writeScores(playerNode*);
 void createPlayer(game*);
-
 void viewScores();
+//UI functions
+void printGame(game *);
+void printQueue(game *);
 
 //head pointer for player linked list
 playerNode * playerHEAD = NULL;
+//head pointer for the queue
+blockNode * blockHEAD = NULL;
 char player[20] = "p";
 
 int main(){
@@ -130,9 +136,16 @@ int main(){
 	readScores();
 	int choice = 4; 
 	bool decision = true;
-
-	printf("Tetris\n\n");
-	printf("Created by:\nBenjamin Griggs -- Nicole Griffin\nZayyad Atekoja -- Allison Babilonia\n\tDavid Szymanski\n\n");
+	
+	printf("  _______     _          _       \n");
+	printf(" |__   __|   | |        (_)      \n");
+	printf("    | |  ___ | |_  _ __  _  ___  \n");
+	printf("    | | / _ \| __|| '__|| |/ __| \n");
+	printf("    | ||  __/| |_ | |   | |\__ \ \n");
+	printf("    |_| \___| \__||_|   |_||___/ \n");
+	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n");
+	printf("\tCreated by:\nBenjamin Griggs -- Nicole Griffin\nZayyad Atekoja -- Allison Babilonia\n\tDavid Szymanski\n\n");
+	printf("*Enlarge the terminal until you see the full word 'Tetris'.*\n");
 	while (decision) {
 	// menu output
 	printf ("0. Exit game\n");
@@ -183,39 +196,37 @@ int main(){
 
 void initializeBlocks()
 {
+	//printf("DEBUG: Initialize\n");
 	int ctr = 0; 
-	blockNode* pointer=(blockNode*)malloc(sizeof(blockNode));
-	while (ctr < 15)
+	blockHEAD = (blockNode*)malloc(sizeof(blockNode));
+	blockHEAD->link = NULL;
+	blockHEAD->piece = blocks[random() % BLOCKS_SIZE];
+
+	blockNode * current = blockHEAD;
+	while (ctr < 5)
 	{
-	blockNode* blockN =(blockNode*)malloc(sizeof(blockNode)); 
-	block blocks = (block)(malloc(sizeof(block)));
-	blockN->piece =blocks[random() % BLOCKS_SIZE];		
-	addBlock(blockN,pointer);
-	ctr ++; 
+	//printf("DEBUG: queue %d\n", ctr);
+	enqueueBlock();
+	ctr++; 
 	}
 }
 
-void enqueueBlock(blockNode* newblock,blockNode* pointer){
-	while (pointer->link != NULL)
-	{
-	pointer = pointer->link; 
-	}
-	pointer->link = newblock; 
+void enqueueBlock(){
+	blockNode * new = (blockNode*)malloc(sizeof(blockNode));
+	new->piece = blocks[random() % BLOCKS_SIZE];
+	new->link = NULL;
+
+	blockNode * current = blockHEAD;
+	while (current->link != NULL)
+		current = current->link; 
+
+	current->link = new;
 }
-void dequeueBlock(blockNode* pointer){
 
-    blockNode* nxt = NULL;
-    blockNode* curr = pointer->link; 
-    if (curr->link != NULL){
-    nxt = curr->link; 
-    pointer->link = nxt; 
-    }
-    else 
-    {
-        pointer->link = NULL; 
-    
-    }
-
+block dequeueBlock(){
+	blockNode* temp = blockHEAD;
+	blockHEAD = blockHEAD->link;
+	return temp->piece;
 }
 
 void runTetris(){
@@ -225,7 +236,7 @@ void runTetris(){
 	int count=0;
 
 	char str[20];
-	printf("Enter your Name.\n");	
+	printf("Enter your Name (max 20 characters).\n");	
 	scanf("%s", str);
 	strcpy(player, str);
 
@@ -235,7 +246,8 @@ void runTetris(){
 
 	tm.tv_sec=0;
 	tm.tv_nsec=1000000;
-
+	
+	initializeBlocks();
 	pickBlock(&g);
 	//initialize the queue here 
 	while (!g.gameover) {
@@ -312,7 +324,10 @@ void printGame(game *g) {
 	for (x = 0; x < 30; x++)
 		printf("\n");
 	//display score info
+	printf("{Player: %s}\n", player);
 	printf("{Score: %d | Level: %d}\n", g->score, g->level);
+	//print block queue
+	printQueue(g);
 	//print top border
 	for (x = 0; x < 2 * g->width + 2; x++)
 		printf("=");
@@ -342,6 +357,39 @@ void printGame(game *g) {
 	printf("\n");
 }//printGame end
 
+//print the upcoming blocks
+void printQueue(game *g){
+	//print top border
+	for (int x = 0; x < 22 ; x++)
+		printf("=");
+	printf("\n");
+	for (int y = 0; y < 4; y++){
+		printf("|");
+		for(int x = 0; x < 20; x++){
+			//top row
+			if(y == 0 && x ==0)
+				printf("  v-NEXT            ");
+			else if(y == 0 && x !=0)
+				continue;
+			else if (x > 0 && y > 0 && x<=blockHEAD->piece.width && y<=blockHEAD->piece.height)
+				printf("%c", blockHEAD->piece.data[y-1][x-1]);
+			else if (x > 5 && y > 0 && x<=blockHEAD->link->piece.width + 5 && y<=blockHEAD->link->piece.height)
+				printf("%c", blockHEAD->link->piece.data[y-1][x-6]);
+			else if (x > 10 && y > 0 && x<=blockHEAD->link->link->piece.width + 10 && y<=blockHEAD->link->link->piece.height)
+				printf("%c", blockHEAD->link->link->piece.data[y-1][x-11]);
+			else if (x > 15 && y > 0 && x<=blockHEAD->link->link->link->piece.width + 15 && y<=blockHEAD->link->link->link->piece.height)
+				printf("%c", blockHEAD->link->link->link->piece.data[y-1][x-16]);
+			else
+				printf(" ");
+
+
+			//printf("*");
+		}
+		//print right border
+		printf("|\n");
+	}
+}
+
 //return 1 if the piece cant move in a direction
 int collisionTest(game *g) {
 	int testX, testY;
@@ -365,8 +413,11 @@ int collisionTest(game *g) {
 
 //load the game with a new random block
 void pickBlock(game *g) {
-	//get randmon block from blocks array
-	g->current = blocks[random() % BLOCKS_SIZE];
+	//get the next block from the queue
+	g->current = dequeueBlock();
+	//g->current = blocks[random() % BLOCKS_SIZE];
+	//add a block to the queue to replace it
+	enqueueBlock();
 	//center the block
 	g->x = (g->width / 2) - (g->current.width / 2);
 	//align block to top
